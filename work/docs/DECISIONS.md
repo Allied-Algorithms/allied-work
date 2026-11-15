@@ -29,5 +29,16 @@ One short entry each.
 - Replaces the planned `robot/` package (geometry, config, pose, controller, api). Missions only `from alliedwork import *`. Settings are the first section of the file.
 - Commands are blocking and each runs its own 10 ms PID loop (no background controller task): simpler for kids, no multitask needed. Steering goes through `DriveBase.drive(speed, turn_rate)` with `use_gyro(True)`.
 - `square_to_wall` takes the wall's heading / coordinate as arguments instead of reading the field file (the hub can't read JSON); codegen will fill them in.
-- `run.py` copies `alliedwork.py` + the mission (as `main.py`) into a temp folder and uploads that, because pybricksdev bundles imports found next to the script. Missions are plain scripts, not `def run()`.
+- `run.py` copies `alliedwork.py` + the mission (as `main.py`) into a temp folder and uploads that, because pybricksdev bundles imports found next to the script. 
 - Removed `.zed/tasks.json` (broken); `python run.py <mission>` replaces it. Telemetry (`T,ms,x,y,h`) prints every 200 ms from the control loop; formal protocol is Phase 3.
+
+## Hub menu (user request)
+- Missions are `runN.py` files each defining `def run()` (a menu needs a function to call). `run.py` generates `main.py` that imports every `runN` and calls `run_menu([...])`; the bundle (`alliedwork.py`, all missions, `main.py`) is built in a temp folder and uploaded (verified that pybricksdev's `compile_multi_file` picks up every import).
+- Menu: light matrix shows N, LEFT/RIGHT cycle (wraps), CENTER starts. While in the menu the stop button is moved to the Bluetooth button so CENTER is usable; during a run CENTER is the stop button again (emergency stop ends the program; CENTER restarts it). A crash in one run is caught, shown (red light + beep) and the menu returns.
+- `python run.py --no-start` uploads without running so the program can be started from the hub with no PC.
+- Numbers show 1-99 (`hub.display.number`).
+
+## Documentation website: MkDocs + Material (user request)
+- Docs stay plain markdown in `work/docs/` (readable in any editor and on GitHub); `mkdocs.yml` (repo root, `docs_dir: work/docs`) turns them into a site. `use_directory_urls: false` so the built `site/` also works opened straight from disk. The built-in `search` plugin is offline.
+- Chosen over a hand-written generator for navigation/search/dark mode with no code to maintain. Note: Material for MkDocs announces end of life on 2027-05-05 (fixes continue until then); its maintained successor is Zensical, which reads the same `mkdocs.yml`: plan a switch then. `run.py docs` sets `NO_MKDOCS_2_WARNING=1` to keep the output quiet.
+- Docs server uses port 8001 so it can run next to the dashboard (8000).

@@ -7,11 +7,14 @@ file or the library changes.
 ## What this project is
 Pybricks-based toolkit for an FLL SPIKE Prime robot:
 - `hardware/alliedwork.py` runs on the hub: ONE file with the settings, PID, pose tracking and the whole mission API. `hardware/sensor_stream.py` streams sensor readings.
-- `run.py` (repo root) uploads a mission to the hub: `python run.py test` (or `--sim`).
+- `run.py` (repo root) bundles `alliedwork.py` + all missions + a generated menu `main.py` and uploads it: `python run.py` (menu), `python run.py run1` (one run), `--sim` (fake robot), `--no-start` (upload only).
+- On the hub the light matrix shows a run number; LEFT/RIGHT change it, CENTER starts it (`run_menu` in alliedwork.py). The number is the N in `runN.py`.
 - `work/pc/` runs on the PC (everything else PC-side lives under `work/`): Bluetooth to the hub, WebSocket to the browser.
 - `work/dashboard/index.html` is the localhost page: live gyro, motors, color sensor (done). Field map / run controls come later.
 - `work/field/missions.json` is the map of the mat: missions, launch areas, obstacles, runs.
-- `hardware/missions/` has one plain script per run (`run1.py`, ...). Copy `_template.py`. Run with `python run.py run1`.
+- `hardware/missions/` has one file per run named `runN.py`, each defining `def run():`. Copy `_template.py`.
+
+Docs: `work/docs/` (start at README.md). Version lives in `hardware/alliedwork.py` (`VERSION`); log every change in `work/docs/CHANGELOG.md`.
 
 ## Coordinate system (always use this)
 - Units: **inches**. Grid: 1 in x 1 in squares.
@@ -63,12 +66,14 @@ Round distances to 0.1 in and angles to 0.5°.
 ```python
 from alliedwork import *
 
-set_pose(x=0, y=0, heading=0)   # home_left default_start_pose
-# M00_example: drive to approach pose (43, 16), heading 0
-drive_to(43, 16, 8)
-turn_to(0, 90)
-drive(4, 4)                     # push into model
-drive(-4, 4)
+def run():
+    set_pose(x=0, y=0, heading=0)   # home_left default_start_pose
+    mission("M00")
+    # M00_example: drive to approach pose (43, 16), heading 0
+    drive_to(43, 16, 8)
+    turn_to(0, 90)
+    drive(4, 4)                     # push into model
+    drive(-4, 4)
 ```
 
 ## Current robot measurements

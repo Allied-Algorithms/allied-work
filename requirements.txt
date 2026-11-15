@@ -8,3 +8,5 @@ aiohttp>=3.9
 jsonschema>=4.0
 # Tests
 pytest>=8.0
+# Documentation website (python run.py docs)
+mkdocs-material>=9.5

@@ -16,6 +16,7 @@ Commands (blocking: each one finishes before the next starts):
     attachment(port, angle, speed=300)      relative move, port "A" or "E"
     attachment_to(port, angle, speed=300)   absolute move
     wait(ms), beep(), log(text), mission(id), stop()
+Menu:     run_menu(missions)  (used by the generated main.py: pick with arrows, start with center)
 Sensors:  heading(), pose(), color(), reflection()
 
 How it works: a PID loop runs every 10 ms inside each command. It estimates
@@ -27,7 +28,7 @@ returns False, so the run keeps going.
 from math import atan2, cos, degrees, radians, sin, sqrt
 
 from pybricks.hubs import PrimeHub
-from pybricks.parameters import Direction, Port, Stop
+from pybricks.parameters import Button, Color, Direction, Port, Stop
 from pybricks.pupdevices import ColorSensor, Motor
 from pybricks.robotics import DriveBase
 from pybricks.tools import StopWatch, wait
@@ -63,6 +64,7 @@ STALL_MS = 1500
 CONTROL_MS = 10
 TELEMETRY_MS = 200     # prints "T,ms,x,y,heading"; 0 = off
 
+VERSION = "0.2.00"
 MM_PER_IN = 25.4
 
 # ============================================================================
@@ -423,6 +425,71 @@ def log(text):
 def mission(mission_id):
     """Mark the start of a mission (shows in the log)."""
     _event("MISSION", mission_id)
+
+
+# ============================================================================
+# 7. HUB MENU: pick a mission with the arrow buttons, start with the center
+# ============================================================================
+
+
+def _stop_button(button):
+    """Which hub button stops the program (the menu needs CENTER for itself)."""
+    try:
+        hub.system.set_stop_button(button)
+    except Exception:
+        pass
+
+
+def _wait_press():
+    """Wait for a fresh button press; returns the set of buttons pressed."""
+    while hub.buttons.pressed():  # let go of the last press first
+        wait(20)
+    while True:
+        pressed = hub.buttons.pressed()
+        if pressed:
+            wait(30)  # debounce
+            return pressed
+        wait(20)
+
+
+def run_menu(missions):
+    """Show mission numbers on the hub. LEFT / RIGHT choose, CENTER starts.
+
+    missions: list of (number, name, function). While a mission runs, pressing
+    CENTER stops the program (press CENTER again to bring the menu back).
+    """
+    if not missions:
+        raise ValueError("run_menu(): no missions found (make hardware/missions/run1.py)")
+    missions = sorted(missions, key=lambda m: m[0])
+    log("alliedwork " + VERSION)
+    n = len(missions)
+    i = 0
+    while True:
+        _stop_button(Button.BLUETOOTH)  # frees CENTER for the menu
+        hub.light.on(Color.GREEN)
+        hub.display.number(missions[i][0])
+        pressed = _wait_press()
+        if Button.RIGHT in pressed:
+            i = (i + 1) % n
+        elif Button.LEFT in pressed:
+            i = (i - 1) % n
+        elif Button.CENTER in pressed:
+            number, name, func = missions[i]
+            _stop_button(Button.CENTER)  # now CENTER = emergency stop
+            hub.light.on(Color.ORANGE)
+            _event("RUN_START", name)
+            hub.speaker.beep(800, 100)
+            try:
+                func()
+                _event("RUN_END", name)
+                hub.speaker.beep(1000, 150)
+            except Exception as e:  # a bug in a mission must not kill the menu
+                _stop()
+                _event("ERROR", "{}: {}".format(name, e))
+                hub.light.on(Color.RED)
+                hub.speaker.beep(200, 400)
+                wait(1500)
+            _stop()
 
 
 __all__ = [

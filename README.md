@@ -24,25 +24,36 @@ hub code in `hardware/` right away (`pyrightconfig.json` tells the editor where 
 
 ## Run
 (with the venv activated)
-- With the robot (hub on, Pybricks firmware): `python -m work.pc.server`
-  (add `--hub "Allied"` to pick a hub by Bluetooth name)
-- Without a robot (simulator): `python -m work.pc.server --sim`
+- With the robot (hub on, Pybricks firmware): `python run.py work`
+  (add `-n "Allied"` to pick a hub by Bluetooth name)
+- Without a robot (simulator): `python run.py work --sim`
+
+(Long form: `python -m work.pc.server [--sim] [--hub NAME]`.)
 
 The browser opens at http://localhost:8000. If the hub disconnects the page says so and
 reconnects by itself. **Freeze** holds the numbers so you can read them.
 
-## Write and run a mission
-1. Copy `hardware/missions/_template.py` to `hardware/missions/run1.py`.
-2. Code with the simple commands from `alliedwork.py` (`drive`, `turn`, `drive_to`, `attachment`, ...). The first line is always `from alliedwork import *`.
-3. Try it without the robot: `python run.py run1 --sim`
-4. Run it on the robot (hub on): `python run.py run1`  (add `-n NAME` to pick a hub)
+## Write a run
+1. Copy `hardware/missions/_template.py` to `hardware/missions/run3.py`. **The number in the file name is the number shown on the robot.**
+2. Code inside `def run():` with the simple commands (`drive`, `turn`, `drive_to`, `attachment`, ...). The first line of the file is always `from alliedwork import *`.
+3. Try it without the robot: `python run.py run3 --sim`
 
-`python run.py` lists the missions. `python run.py test` drives a 24 in square.
+## Put runs on the robot (competition flow)
+1. Hub on. Run `python run.py` : it uploads **all** runs plus the menu and starts it.
+   (Use `python run.py --no-start` to upload only, then press the hub's center button to start.)
+2. The light matrix shows a run number. **Left / right arrow buttons** change it, the **center button** starts it.
+3. When the run ends the robot beeps and the menu comes back. Pressing **center during a run stops the robot**; press center again to get the menu back.
+
+Other commands: `python run.py run1` (upload and run just one), `python run.py list`, `-n NAME` to pick a hub.
 All robot settings (ports, wheel size, PID gains) are at the top of `hardware/alliedwork.py`.
 
+## Documentation
+Full docs (version 0.2.00) with a changelog: [`work/docs/README.md`](work/docs/README.md).
+As a website: `python run.py docs` (opens http://localhost:8001); changelog: `python run.py changelog`; static copy for offline/sharing: `python run.py docs --build` (open `site/index.html`).
+
 ## Layout
-- `hardware/` runs on the hub: `alliedwork.py` (the library), `missions/` (your runs), `sensor_stream.py` (dashboard readings).
-- `run.py` uploads a mission to the hub.
+- `hardware/` runs on the hub: `alliedwork.py` (the library + menu), `missions/` (your runs: run1.py, run2.py...), `sensor_stream.py` (dashboard readings).
+- `run.py` bundles and uploads the runs to the hub.
 - `work/` runs on the computer (`pc/` server, `dashboard/` page, `field/`, `docs/`, `tests/`).
 
 Tests: `python -m pytest`

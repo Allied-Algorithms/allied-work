@@ -157,6 +157,7 @@ class SimWorld:
         self.pressed: set[Button] = set()
         self.light: Any = None
         self.display_text: Any = None
+        self.stop_button: Any = None
         self.imu_offset = -c.start_heading_deg  # hub reads 0 at boot
         self.yaw_rate = 0.0  # true deg/s, for imu.angular_velocity
         self._wall_t0 = time.monotonic()
@@ -878,6 +879,17 @@ class _Battery:
         return 0
 
 
+class _System:
+    def __init__(self, w: SimWorld) -> None:
+        self._w = w
+
+    def set_stop_button(self, button: Any) -> None:
+        self._w.stop_button = button
+
+    def shutdown(self) -> None:
+        raise SystemExit
+
+
 class PrimeHub:
     """Fake SPIKE Prime hub."""
 
@@ -889,6 +901,7 @@ class PrimeHub:
         self.display = _Display(w)
         self.speaker = _Speaker(w)
         self.battery = _Battery(w)
+        self.system = _System(w)
 
 
 # --------------------------------------------------------------------------
